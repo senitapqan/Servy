@@ -8,6 +8,7 @@ defmodule First.Handler do
   import First.Conv, only: [full_status: 1]
 
   alias First.Conv
+  alias First.PokemonController
   @doc "Transforms the request into a response"
   def handle(request) do
     IO.puts request
@@ -19,17 +20,16 @@ defmodule First.Handler do
       |> response_format
   end
 
-  def route(%Conv{method: "POST", path: "/pokmons"} = conv) do
-    params = %{"name" => "Raichu", "type" => "Electro"}
-    %{ conv | status: 201, resp_body: "New pokemon with name: #{params["name"]} and type: #{params["type"]} was created"}
+  def route(%Conv{method: "POST", path: "/pokemons"} = conv) do
+    PokemonController.createPokemon(conv, conv.params)
   end
 
   def route(%Conv{method: "GET", path: "/pokemons/" <> id} = conv) do
-    %{conv | resp_body: "Pokemon #{id}", status: 200}
+    PokemonController.getPokemon(conv, id)
   end
 
   def route(%Conv{method: "GET", path: "/pokemons"} = conv) do
-    %{conv | resp_body: "Granbull, Porygon2, Zigzagon", status: 200}
+    PokemonController.getPokemons(conv)
   end
 
   def route(%Conv{method: "GET", path: "/home"} = conv) do
@@ -114,6 +114,19 @@ Host: example.com
 User-Agent: ExampleBrowser/1.0
 Accept: */*
 
+"""
+
+response = First.Handler.handle(request)
+
+IO.puts response
+
+request = """
+POST /pokemons HTTP/1.1
+Host: example.com
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 27
+
+name=Raichu&type=Electrical
 """
 
 response = First.Handler.handle(request)
